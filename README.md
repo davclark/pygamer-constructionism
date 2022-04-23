@@ -5,13 +5,13 @@ In Mindstorms, Papert suggests that one day a group of parents might organically
 (paraphrased):
 
 > You know, if one person, just one person does it they may think he's really sick, and they won't take him. And if two
-> people, two people do it, in harmony, they may think they're both *cough* and they won't take either of them and three
-> people do it, three, can you imagine, three people walking in, developing an ecosystem for creative exploration and
-> learning and walking out. They may think it's an organization. And can you, can you imagine fifty people a day, I said
-> fifty people a day developing an ecosystem for creative exploration and learning and walking out. And friends, they
-> may think it's a movement! And that's what it is, the PyGamer Constructionism Movement, and all you got to do to join
-> is play along the next time it comes around, with feeling. So we'll wait for it to come around, here and play together
-> when it does!
+> people, two people do it, in harmony, they may think they're both *cough* and they won't take either of them. And if
+> three people do it, three, can you imagine, three people walking in, developing an ecosystem for creative exploration
+> and learning and walking out. They may think it's an organization. And can you, can you imagine fifty people a day, I
+> said fifty people a day developing an ecosystem for creative exploration and learning and walking out. And friends,
+> they may think it's a movement! And that's what it is, the PyGamer Constructionism Movement, and all you got to do to
+> join is play along the next time it comes around, with feeling. So we'll wait for it to come around, here and play
+> together when it does!
 
 So, I hope you'll join me.
 
