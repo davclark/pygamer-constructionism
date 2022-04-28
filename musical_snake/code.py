@@ -5,6 +5,7 @@ import displayio
 
 from adafruit_turtle import turtle, Color
 import adafruit_imageload
+from adafruit_pybadger.pygamer import pygamer
 
 # PyGamer resolution is 160x128
 display = board.DISPLAY
@@ -56,7 +57,17 @@ while True:
     # When you change the sprite, it seems to mess up the location?
     # sprite[0] = source_index % 6
     # source_index += 1
-    sprite_group.x += 1
+    x, y = pygamer.joystick
+    if x > 34000:
+        sprite_group.x += 1
+    elif x < 32000:
+        sprite_group.x -= 1
+
+    if y > 33000:
+        sprite_group.y += 1
+    elif y < 31000:
+        sprite_group.y -= 1
+ 
     time.sleep(0.1)
 
 # Square with dots
