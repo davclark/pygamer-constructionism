@@ -53,21 +53,49 @@ display.show(meta_group)
 
 # Loop through each sprite in the sprite sheet
 source_index = 0
+thresholds = {
+    'right': 36000,
+    'left': 30000,
+    'up': 35000,
+    'down': 29000,
+}
+delta_x = 1
+delta_y = 1
 while True:
     # When you change the sprite, it seems to mess up the location?
     # sprite[0] = source_index % 6
     # source_index += 1
     x, y = pygamer.joystick
-    if x > 34000:
-        sprite_group.x += 1
-    elif x < 32000:
-        sprite_group.x -= 1
 
-    if y > 33000:
-        sprite_group.y += 1
-    elif y < 31000:
-        sprite_group.y -= 1
- 
+    # We include ONLY cases where the joystick is pressed in some direction
+    # If we're in the middle, we don't update
+    if x > 36000:
+        delta_x = 1
+        if y > 33000:
+            delta_y = 1
+        elif y < 31000:
+            delta_y = -1
+        else:
+            delta_y = 0
+    elif x < 30000:
+        delta_x = -1
+        if y > 33000:
+            delta_y = 1
+        elif y < 31000:
+            delta_y = -1
+        else:
+            delta_y = 0
+    else:
+        if y > 33000:
+            delta_y = 1
+            delta_x = 0
+        elif y < 31000:
+            delta_y = -1
+            delta_x = 0
+
+    sprite_group.x += delta_x
+    sprite_group.y += delta_y
+
     time.sleep(0.1)
 
 # Square with dots
