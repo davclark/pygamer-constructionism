@@ -1,7 +1,9 @@
 '''Separating logic for our Constructivist Snake Game display into a separate module'''
+import asyncio
 import board
 import displayio
 
+from adafruit_pybadger.pygamer import pygamer
 import adafruit_imageload
 
 # Draw a white background
@@ -47,3 +49,60 @@ sprite_group.y = 80
 display = board.DISPLAY
 
 display.show(meta_group)
+
+async def move():
+    # I developed these thresholds empirically inspecting pygamer.joystick on the REPL
+    thresh = {
+        'right': 36000,
+        'left': 30000,
+        'up': 35000,
+        'down': 29000,
+    }
+    delta_x = 1
+    delta_y = 0
+
+    while True:
+        x, y = pygamer.joystick
+
+        # We include ONLY cases where the joystick is pressed in some direction
+        # If we're in the middle, we don't update
+        # Maybe it's nicer to just use pygamer.button.right?
+        if x > thresh['right']:
+            delta_x = 1
+            if y > thresh['up']:
+                delta_y = 1
+            elif y < thresh['down']:
+                delta_y = -1
+            else:
+                delta_y = 0
+        elif x < thresh['left']:
+            delta_x = -1
+            if y > thresh['up']:
+                delta_y = 1
+            elif y < thresh['down']:
+                delta_y = -1
+            else:
+                delta_y = 0
+        else:
+            if y > thresh['up']:
+                delta_y = 1
+                delta_x = 0
+            elif y < thresh['down']:
+                delta_y = -1
+                delta_x = 0
+
+        # Actually move the snake
+        sprite_group.x += delta_x
+        sprite_group.y += delta_y
+
+        if sprite_group.x < -16:
+            sprite_group.x = 160 - 16
+        if sprite_group.x > 160 - 16:
+            sprite_group.x = -16
+
+        if sprite_group.y < -16:
+            sprite_group.y = 128 - 16
+        if sprite_group.y > 128 - 16:
+            sprite_group.y = -16
+
+        await asyncio.sleep(0.1)
