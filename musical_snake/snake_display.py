@@ -5,6 +5,7 @@ import displayio
 
 from adafruit_pybadger.pygamer import pygamer
 import adafruit_imageload
+from adafruit_display_shapes.circle import Circle
 
 # Draw a white background
 background = displayio.Bitmap(160, 128, 1)
@@ -16,6 +17,60 @@ bg_sprite = displayio.TileGrid(background, pixel_shader=bg_palette, x=0, y=0)
 bg_group = displayio.Group()
 bg_group.append(bg_sprite)
 
+
+# Basic shapes for now
+class Color:
+    """Standard colors"""
+
+    WHITE = 0xFFFFFF
+    BLACK = 0x000000
+    RED = 0xFF0000
+    ORANGE = 0xFFA500
+    YELLOW = 0xFFEE00
+    GREEN = 0x00C000
+    BLUE = 0x0000FF
+    PURPLE = 0x8040C0
+    PINK = 0xFF40C0
+    LIGHT_GRAY = 0xAAAAAA
+    GRAY = 0x444444
+    BROWN = 0xCA801D
+    DARK_GREEN = 0x008700
+    TURQUOISE = 0x00C0C0
+    DARK_BLUE = 0x0000AA
+    DARK_RED = 0x800000
+
+    colors = (
+        BLACK,
+        WHITE,
+        RED,
+        YELLOW,
+        GREEN,
+        ORANGE,
+        BLUE,
+        PURPLE,
+        PINK,
+        GRAY,
+        LIGHT_GRAY,
+        BROWN,
+        DARK_GREEN,
+        TURQUOISE,
+        DARK_BLUE,
+        DARK_RED,
+    )
+
+circles = [Circle(20, 64, 5, fill=Color.RED),
+           Circle(40, 64, 5, fill=Color.WHITE, outline=Color.BLACK),
+           Circle(60, 64, 5, fill=Color.YELLOW),
+           Circle(80, 64, 5, fill=Color.WHITE, outline=Color.BLACK),
+           Circle(100, 64, 5, fill=Color.RED),
+           Circle(120, 64, 5, fill=Color.RED),
+           Circle(140, 64, 5, fill=Color.RED),
+           ]
+
+for c in circles:
+    bg_group.append(c)
+
+# Set up a sprite from the Adafruit sprite sheet
 sprite_sheet, palette = adafruit_imageload.load("/cp_sprite_sheet.bmp",
                                                 bitmap=displayio.Bitmap,
                                                 palette=displayio.Palette)
@@ -39,8 +94,8 @@ meta_group.append(bg_group)
 meta_group.append(sprite_group)
 
 
-# Set sprite location - unlike the adafruit instructions, I seem to need to set the sprite_group location (not the
-# sprite)
+# Set sprite location - unlike the adafruit instructions, I seem to need to set
+# the sprite_group location (not the sprite)
 sprite_group.x = 0
 sprite_group.y = 80
 
