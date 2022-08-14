@@ -6,18 +6,20 @@ import asyncio
 from adafruit_pybadger.pygamer import pygamer
 
 from snake_display import move
+from instrument import AColorInstrument as Inst
+from instrument import DO, RE, MI, SO
 
 
 async def groove():
     while True:
         if pygamer.button.select:
-            pygamer.start_tone(440)
+            pygamer.start_tone(Inst.tones[DO])
         elif pygamer.button.start:
-            pygamer.start_tone(493.88)
+            pygamer.start_tone(Inst.tones[RE])
         elif pygamer.button.b:
-            pygamer.start_tone(554.37)
+            pygamer.start_tone(Inst.tones[MI])
         elif pygamer.button.a:
-            pygamer.start_tone(659.25)
+            pygamer.start_tone(Inst.tones[SO])
         else:
             pygamer.stop_tone()
 

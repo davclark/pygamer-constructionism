@@ -1,4 +1,7 @@
-'''Separating logic for our Constructivist Snake Game display into a separate module'''
+'''
+snake_display.py - logic for Snake Game display into a separate module
+'''
+
 import asyncio
 import board
 import displayio
@@ -6,6 +9,9 @@ import displayio
 from adafruit_pybadger.pygamer import pygamer
 import adafruit_imageload
 from adafruit_display_shapes.circle import Circle
+
+from instrument import AColorInstrument as Instrument
+from instrument import DO, RE, MI, SO, Color, mary_1
 
 # Draw a white background
 background = displayio.Bitmap(160, 128, 1)
@@ -17,57 +23,30 @@ bg_sprite = displayio.TileGrid(background, pixel_shader=bg_palette, x=0, y=0)
 bg_group = displayio.Group()
 bg_group.append(bg_sprite)
 
+# documentation type to clarify where we expect an actual note
+Solfège = int
 
-# Basic shapes for now
-class Color:
-    """Standard colors"""
+def circle_for_note(note: Solfège, x_loc: int, y_loc: int = 64, diameter: int = 5) -> displayio.TileGrid:
+    '''
+    Create a circle for display
+    '''
+    fill = Instrument.colors[note]
+    if fill == Color.WHITE:
+        outline = Color.BLACK
+    else:
+        outline = None
+    return Circle(x_loc, y_loc, diameter, fill=fill, outline=outline)
 
-    WHITE = 0xFFFFFF
-    BLACK = 0x000000
-    RED = 0xFF0000
-    ORANGE = 0xFFA500
-    YELLOW = 0xFFEE00
-    GREEN = 0x00C000
-    BLUE = 0x0000FF
-    PURPLE = 0x8040C0
-    PINK = 0xFF40C0
-    LIGHT_GRAY = 0xAAAAAA
-    GRAY = 0x444444
-    BROWN = 0xCA801D
-    DARK_GREEN = 0x008700
-    TURQUOISE = 0x00C0C0
-    DARK_BLUE = 0x0000AA
-    DARK_RED = 0x800000
 
-    colors = (
-        BLACK,
-        WHITE,
-        RED,
-        YELLOW,
-        GREEN,
-        ORANGE,
-        BLUE,
-        PURPLE,
-        PINK,
-        GRAY,
-        LIGHT_GRAY,
-        BROWN,
-        DARK_GREEN,
-        TURQUOISE,
-        DARK_BLUE,
-        DARK_RED,
-    )
+def circles_for_sequence(seq: list[Solfège], x_locs: list[int]) -> list[displayio.TileGrid]:
+    '''
+    Make a visual row for the sequencer
+    '''
+    return [circle_for_note(note, x_loc) for note, x_loc in zip(seq, x_locs)]
 
-circles = [Circle(20, 64, 5, fill=Color.RED),
-           Circle(40, 64, 5, fill=Color.WHITE, outline=Color.BLACK),
-           Circle(60, 64, 5, fill=Color.YELLOW),
-           Circle(80, 64, 5, fill=Color.WHITE, outline=Color.BLACK),
-           Circle(100, 64, 5, fill=Color.RED),
-           Circle(120, 64, 5, fill=Color.RED),
-           Circle(140, 64, 5, fill=Color.RED),
-           ]
+sequence_x_locs = [20, 40, 60, 80, 100, 120, 140]
 
-for c in circles:
+for c in circles_for_sequence(mary_1, sequence_x_locs):
     bg_group.append(c)
 
 # Set up a sprite from the Adafruit sprite sheet
