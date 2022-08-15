@@ -21,7 +21,7 @@ async def main():
     sequencer.notes_for_sequence(mary_1)
     sequencer.draw_notes()
 
-    snake = Snake(sequencer, (0, Sequencer.row_locs[0]))
+    snake = Snake(sequencer, (-8, Sequencer.row_locs[0]))
 
     meta_group.append(sequencer.group)
     meta_group.append(snake.group)
