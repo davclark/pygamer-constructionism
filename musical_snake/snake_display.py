@@ -3,6 +3,7 @@ snake_display.py - logic for Snake Game display into a separate module
 '''
 
 import asyncio
+from math import sqrt
 try:
     # We use the hack that avoids extra memory for typing imports, the typing lib isn't in
     # CircuitPython, so this will only be imported using a CPython interpreter
@@ -14,26 +15,18 @@ try:
 except ImportError:
     pass
 
-import board
 import displayio
 
 from adafruit_pybadger.pygamer import pygamer
 import adafruit_imageload
 from adafruit_display_shapes.circle import Circle
 
-from instrument import AColorInstrument as Instrument
-from instrument import DO, RE, MI, SO, Color, mary_1
+from instrument import Color
 
-# Draw a white background
-background = displayio.Bitmap(160, 128, 1)
-bg_palette = displayio.Palette(1)
-bg_palette[0] = 0xFFFFFF
 
-bg_sprite = displayio.TileGrid(background, pixel_shader=bg_palette, x=0, y=0)
-
-bg_group = displayio.Group()
-bg_group.append(bg_sprite)
-
+def dist(a, b):
+    '''A simple Euclidean distance'''
+    return sqrt(sum((s - t) ** 2 for s, t in zip(a, b)))
 
 class Sequencer:
     '''
@@ -47,10 +40,18 @@ class Sequencer:
     # On-screen y location of our rows
     row_locs = [64]
     group: displayio.Group
-    notes: list[tuple]  # tuple[Coords, displayio.TileGrid, Solfège]
+    notes: list[tuple[Coords, displayio.TileGrid, Solfège]]
 
-    def __init__(self, display_group: displayio.Group):
-        self.group = display_group
+    def __init__(self, instrument):
+        self.instrument = instrument
+        # Draw a white background
+        background = displayio.Bitmap(160, 128, 1)
+        bg_palette = displayio.Palette(1)
+        bg_palette[0] = 0xFFFFFF
+        bg_sprite = displayio.TileGrid(background, pixel_shader=bg_palette, x=0, y=0)
+
+        self.group = displayio.Group()
+        self.group.append(bg_sprite)
         self.notes = []
 
     def notes_for_sequence(self, seq: list[Solfège], row_index: int = 0):
@@ -66,7 +67,7 @@ class Sequencer:
         '''
         Create a circle for display
         '''
-        fill = Instrument.colors[note]
+        fill = self.instrument.colors[note]
         if fill == Color.WHITE:
             outline = Color.BLACK
         else:
@@ -88,10 +89,15 @@ class Sequencer:
         for _, sprite, _ in self.notes:
             self.group.append(sprite)
 
-
-sequencer = Sequencer(bg_group)
-sequencer.notes_for_sequence(mary_1)
-sequencer.draw_notes()
+    def bump(self, loc: Coords):
+        for note_loc, _, note in self.notes:
+            curr_dist = dist(loc, note_loc)
+            if curr_dist <= 5:
+                self.instrument.play(note, 'sequencer')
+                break
+        else:
+            self.instrument.stop('sequencer')
+            pass
 
 
 class Snake:
@@ -103,7 +109,8 @@ class Snake:
     '''
     group: displayio.Group
 
-    def __init__(self, lr_loc, row_loc):
+    def __init__(self, sequencer: Sequencer, starting_loc: Coords):
+        self.sequencer = sequencer
         # Set up a sprite from the Adafruit sprite sheet
         sprite_sheet, palette = adafruit_imageload.load("/cp_sprite_sheet.bmp",
                                                         bitmap=displayio.Bitmap,
@@ -121,69 +128,67 @@ class Snake:
         # Add the sprite to the Group
         self.group.append(sprite)
 
-        self.set_location(lr_loc, row_loc)
+        self.set_location(starting_loc)
 
-    def set_location(self, lr_loc: int, row_loc: int):
+    def set_location(self, coords: Coords):
         # Set sprite location - unlike the adafruit instructions, I seem to need to set
         # the sprite_group location (not the sprite)
         # We subtract 8 to make our coordinates comparable to our sequencer's circle centers
+        lr_loc, row_loc = coords
         self.group.x = lr_loc - 16
         self.group.y = row_loc - 16
 
 
-    def move(self, lr_delta: int, row_delta: int) -> Coords:
+    async def move(self):
         '''
         Update snake location and return current coordinates as a tuple
 
         We add 16 to make our coordinates comparable to our sequencer's circle centers
         '''
-        self.group.x += lr_delta
-        self.group.y += row_delta
+        lr_delta = 1
+        row_delta = 0
 
-        if self.group.x < -16:
-            self.group.x = 160 - 16
-        if self.group.x > 160 - 16:
-            self.group.x = -16
+        while True:
+            lr_delta, row_delta = self.check_joystick(lr_delta, row_delta)
 
-        if self.group.y < -16:
-            self.group.y = 128 - 16
-        if self.group.y > 128 - 16:
-            self.group.y = -16
+            self.group.x += lr_delta
+            self.group.y += row_delta
 
-        return (self.group.x + 16, self.group.y + 16)
+            if self.group.x < -16:
+                self.group.x = 160 - 16
+            if self.group.x > 160 - 16:
+                self.group.x = -16
 
-snake = Snake(0, Sequencer.row_locs[0])
+            if self.group.y < -16:
+                self.group.y = 128 - 16
+            if self.group.y > 128 - 16:
+                self.group.y = -16
 
-# We combine our groups into a group
-meta_group = displayio.Group()
+            self.sequencer.bump((self.group.x + 16, self.group.y + 16))
 
-meta_group.append(bg_group)
-meta_group.append(snake.group)
+            await asyncio.sleep(1 / 15)
 
 
-# Add the Group to the Display
-# PyGamer resolution is 160x128
-display = board.DISPLAY
+    def check_joystick(self, delta_x, delta_y) -> Coords:
+        '''
+        Update delta coordinates based on joystick
 
-display.show(meta_group)
+        We take the previous coordinates because we don't update if the joystick is neutral
+        '''
+        # I developed these thresholds empirically inspecting pygamer.joystick on the REPL
+        # Maybe it's nicer to just use pygamer.button.right?
+        # But will wait on that until after checking out the stage library
+        thresh = {
+            'right': 36000,
+            'left': 30000,
+            'up': 35000,
+            'down': 29000,
+        }
 
-async def move():
-    # I developed these thresholds empirically inspecting pygamer.joystick on the REPL
-    thresh = {
-        'right': 36000,
-        'left': 30000,
-        'up': 35000,
-        'down': 29000,
-    }
-    delta_x = 1
-    delta_y = 0
-
-    while True:
         x, y = pygamer.joystick
 
         # We include ONLY cases where the joystick is pressed in some direction
         # If we're in the middle, we don't update
-        # Maybe it's nicer to just use pygamer.button.right?
         if x > thresh['right']:
             delta_x = 1
             if y > thresh['up']:
@@ -208,6 +213,4 @@ async def move():
                 delta_y = -1
                 delta_x = 0
 
-        snake.move(delta_x, delta_y)
-
-        await asyncio.sleep(0.1)
+        return delta_x, delta_y

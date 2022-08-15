@@ -3,32 +3,36 @@ musical_snake/code.py - a snake game / step sequencer mashup
 '''
 import asyncio
 
-from adafruit_pybadger.pygamer import pygamer
+import displayio
+import board
 
-from snake_display import move
-from instrument import AColorInstrument as Inst
-from instrument import DO, RE, MI, SO
+from snake_display import Sequencer, Snake
+from instrument import AColorInstrument, DO, RE, MI, SO
 
 
-async def groove():
-    while True:
-        if pygamer.button.select:
-            Inst.play(DO)
-        elif pygamer.button.start:
-            Inst.play(RE)
-        elif pygamer.button.b:
-            Inst.play(MI)
-        elif pygamer.button.a:
-            Inst.play(SO)
-        else:
-            Inst.stop()
-
-        await asyncio.sleep(0)
-
+mary_1 = [MI, RE, DO, RE, MI, MI, MI, None]
 
 async def main():
-    move_task = move()
-    groove_task = groove()
+    # Top-level group for combining all our groups
+    meta_group = displayio.Group()
+
+    instrument = AColorInstrument()
+    sequencer = Sequencer(instrument)
+    sequencer.notes_for_sequence(mary_1)
+    sequencer.draw_notes()
+
+    snake = Snake(sequencer, (0, Sequencer.row_locs[0]))
+
+    meta_group.append(sequencer.group)
+    meta_group.append(snake.group)
+
+    # Add the Group to the Display
+    # PyGamer resolution is 160x128
+    display = board.DISPLAY
+    display.show(meta_group)
+
+    move_task = snake.move()
+    groove_task = instrument.groove()
 
     # An Exception in either task will propagate here
     await asyncio.gather(move_task, groove_task)

@@ -1,6 +1,7 @@
 '''
 instrument.py - frequencies and ways of organizing them
 '''
+import asyncio
 try:
     import typing
     Solfège = int
@@ -51,12 +52,10 @@ class Color:
 
 # The current plan is to use solfège in our sequences so we can easily select another root
 # And already we're hitting the 0- vs. 1-offset thing
-DO = 0
-RE = 1
-MI = 2
-SO = 3
-
-mary_1 = [MI, RE, DO, RE, MI, MI, MI, None]
+DO: Solfège = 0
+RE: Solfège = 1
+MI: Solfège = 2
+SO: Solfège = 3
 
 class AColorInstrument:
     # Frequencies with A natural (440 Hz) as the root
@@ -65,11 +64,44 @@ class AColorInstrument:
     # Based on the keycap colors and ordering on my PyGamer
     colors = [Color.YELLOW, Color.WHITE, Color.RED, Color.BLACK]
 
-    @classmethod
-    def play(cls, note: Solfège):
-        pygamer.start_tone(cls.tones[note])
+    playing = None
 
-    @classmethod
-    def stop(cls):
-        pygamer.stop_tone()
+    def play(self, note: Solfège, source: str):
+        '''
+        Play a frequency corresponding to the given note on this instrument
 
+        source can be 'button' or 'sequencer', and 'button' takes precedence
+        '''
+        frequency = self.tones[note]
+        if source == 'button':
+            if self.playing == 'sequencer':
+                # Button overrides the sequencer
+                self.stop('sequencer')
+            # Not elif because we want to check this whether we hit the above branch or not
+            if self.playing is None:
+                self.playing = 'button'
+                pygamer.start_tone(frequency)
+
+        elif source == 'sequencer' and self.playing is None:
+            self.playing = 'sequencer'
+            pygamer.start_tone(frequency)
+
+    def stop(self, source: str):
+        if source == self.playing:
+            pygamer.stop_tone()
+            self.playing = None
+
+    async def groove(self):
+        while True:
+            if pygamer.button.select:
+                self.play(DO, 'button')
+            elif pygamer.button.start:
+                self.play(RE, 'button')
+            elif pygamer.button.b:
+                self.play(MI, 'button')
+            elif pygamer.button.a:
+                self.play(SO, 'button')
+            else:
+                self.stop('button')
+
+            await asyncio.sleep(0)
