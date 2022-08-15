@@ -116,6 +116,10 @@ class Snake:
                                                         bitmap=displayio.Bitmap,
                                                         palette=displayio.Palette)
 
+        # I just looked to see what index was white (0xFFFFFF)
+        # The eye is transparent now, which is a little weird, but better than a random square of white
+        palette.make_transparent(19)
+
         sprite = displayio.TileGrid(sprite_sheet, pixel_shader=palette,
                                     width = 1,
                                     height = 1,
