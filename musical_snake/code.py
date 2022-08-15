@@ -13,15 +13,15 @@ from instrument import DO, RE, MI, SO
 async def groove():
     while True:
         if pygamer.button.select:
-            pygamer.start_tone(Inst.tones[DO])
+            Inst.play(DO)
         elif pygamer.button.start:
-            pygamer.start_tone(Inst.tones[RE])
+            Inst.play(RE)
         elif pygamer.button.b:
-            pygamer.start_tone(Inst.tones[MI])
+            Inst.play(MI)
         elif pygamer.button.a:
-            pygamer.start_tone(Inst.tones[SO])
+            Inst.play(SO)
         else:
-            pygamer.stop_tone()
+            Inst.stop()
 
         await asyncio.sleep(0)
 

@@ -131,11 +131,11 @@ class Snake:
         self.group.y = row_loc - 16
 
 
-    def move(self, lr_delta: int, row_delta: int):
+    def move(self, lr_delta: int, row_delta: int) -> Coords:
         '''
         Update snake location and return current coordinates as a tuple
 
-        We add 8 to make our coordinates comparable to our sequencer's circle centers
+        We add 16 to make our coordinates comparable to our sequencer's circle centers
         '''
         self.group.x += lr_delta
         self.group.y += row_delta

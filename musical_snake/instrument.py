@@ -1,6 +1,14 @@
 '''
 instrument.py - frequencies and ways of organizing them
 '''
+try:
+    import typing
+    Solfège = int
+except ImportError:
+    pass
+
+from adafruit_pybadger.pygamer import pygamer
+
 
 class Color:
     """Standard colors"""
@@ -56,3 +64,12 @@ class AColorInstrument:
 
     # Based on the keycap colors and ordering on my PyGamer
     colors = [Color.YELLOW, Color.WHITE, Color.RED, Color.BLACK]
+
+    @classmethod
+    def play(cls, note: Solfège):
+        pygamer.start_tone(cls.tones[note])
+
+    @classmethod
+    def stop(cls):
+        pygamer.stop_tone()
+
