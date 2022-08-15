@@ -3,6 +3,17 @@ snake_display.py - logic for Snake Game display into a separate module
 '''
 
 import asyncio
+try:
+    # We use the hack that avoids extra memory for typing imports, the typing lib isn't in
+    # CircuitPython, so this will only be imported using a CPython interpreter
+    import typing
+
+    # documentation types to clarify where we expect an actual note
+    Solfège = int
+    Coords = tuple[int, int]
+except ImportError:
+    pass
+
 import board
 import displayio
 
@@ -23,60 +34,132 @@ bg_sprite = displayio.TileGrid(background, pixel_shader=bg_palette, x=0, y=0)
 bg_group = displayio.Group()
 bg_group.append(bg_sprite)
 
-# documentation type to clarify where we expect an actual note
-Solfège = int
 
-def circle_for_note(note: Solfège, x_loc: int, y_loc: int = 64, diameter: int = 5) -> displayio.TileGrid:
+class Sequencer:
     '''
-    Create a circle for display
+    Our core step-sequencer logic:
+
+    1. Render circles onto the bacground group
+    2. Provide logic for sprite collision and note-playing
     '''
-    fill = Instrument.colors[note]
-    if fill == Color.WHITE:
-        outline = Color.BLACK
-    else:
-        outline = None
-    return Circle(x_loc, y_loc, diameter, fill=fill, outline=outline)
+    # On-screen left-right / x location of our circles
+    lr_locs = [20, 40, 60, 80, 100, 120, 140]
+    # On-screen y location of our rows
+    row_locs = [64]
+    group: displayio.Group
+    notes: list[tuple]  # tuple[Coords, displayio.TileGrid, Solfège]
+
+    def __init__(self, display_group: displayio.Group):
+        self.group = display_group
+        self.notes = []
+
+    def notes_for_sequence(self, seq: list[Solfège], row_index: int = 0):
+        '''
+        Make a visual row for the sequencer
+        '''
+        # For the time being we will skip the 8th note, as we only have 7 x_locs
+        for lr_index, note in enumerate(seq):
+            if note is not None:
+                self.add_note(note, lr_index, row_index)
+
+    def add_note(self, note: Solfège, lr_index: int, row_index: int, diameter: int = 5):
+        '''
+        Create a circle for display
+        '''
+        fill = Instrument.colors[note]
+        if fill == Color.WHITE:
+            outline = Color.BLACK
+        else:
+            outline = None
+        lr = self.lr_locs[lr_index]
+        row = self.row_locs[row_index]
+        self.notes.append((
+            (lr, row),
+            Circle(lr, row, diameter, fill=fill, outline=outline),
+            note
+            ))
+
+    def draw_notes(self):
+        '''
+        Draw all of the notes in self.notes
+
+        Call after populating self.notes with self.notes_for_sequence()
+        '''
+        for _, sprite, _ in self.notes:
+            self.group.append(sprite)
 
 
-def circles_for_sequence(seq: list[Solfège], x_locs: list[int]) -> list[displayio.TileGrid]:
+sequencer = Sequencer(bg_group)
+sequencer.notes_for_sequence(mary_1)
+sequencer.draw_notes()
+
+
+class Snake:
     '''
-    Make a visual row for the sequencer
+    Keep track of the Blinka sprite
+
+    Sprite positioning is based on the corner, so we also have some conversions to make collision
+    computation easier.
     '''
-    return [circle_for_note(note, x_loc) for note, x_loc in zip(seq, x_locs)]
+    group: displayio.Group
 
-sequence_x_locs = [20, 40, 60, 80, 100, 120, 140]
+    def __init__(self, lr_loc, row_loc):
+        # Set up a sprite from the Adafruit sprite sheet
+        sprite_sheet, palette = adafruit_imageload.load("/cp_sprite_sheet.bmp",
+                                                        bitmap=displayio.Bitmap,
+                                                        palette=displayio.Palette)
 
-for c in circles_for_sequence(mary_1, sequence_x_locs):
-    bg_group.append(c)
+        sprite = displayio.TileGrid(sprite_sheet, pixel_shader=palette,
+                                    width = 1,
+                                    height = 1,
+                                    tile_width = 16,
+                                    tile_height = 16)
 
-# Set up a sprite from the Adafruit sprite sheet
-sprite_sheet, palette = adafruit_imageload.load("/cp_sprite_sheet.bmp",
-                                                bitmap=displayio.Bitmap,
-                                                palette=displayio.Palette)
+        # Create a Group to hold the sprite
+        self.group = displayio.Group(scale=2)
 
-sprite = displayio.TileGrid(sprite_sheet, pixel_shader=palette,
-                            width = 1,
-                            height = 1,
-                            tile_width = 16,
-                            tile_height = 16)
+        # Add the sprite to the Group
+        self.group.append(sprite)
 
-# Create a Group to hold the sprite
-sprite_group = displayio.Group(scale=2)
+        self.set_location(lr_loc, row_loc)
 
-# Add the sprite to the Group
-sprite_group.append(sprite)
+    def set_location(self, lr_loc: int, row_loc: int):
+        # Set sprite location - unlike the adafruit instructions, I seem to need to set
+        # the sprite_group location (not the sprite)
+        # We subtract 8 to make our coordinates comparable to our sequencer's circle centers
+        self.group.x = lr_loc - 16
+        self.group.y = row_loc - 16
+
+
+    def move(self, lr_delta: int, row_delta: int):
+        '''
+        Update snake location and return current coordinates as a tuple
+
+        We add 8 to make our coordinates comparable to our sequencer's circle centers
+        '''
+        self.group.x += lr_delta
+        self.group.y += row_delta
+
+        if self.group.x < -16:
+            self.group.x = 160 - 16
+        if self.group.x > 160 - 16:
+            self.group.x = -16
+
+        if self.group.y < -16:
+            self.group.y = 128 - 16
+        if self.group.y > 128 - 16:
+            self.group.y = -16
+
+        return (self.group.x + 16, self.group.y + 16)
+
+snake = Snake(0, Sequencer.row_locs[0])
 
 # We combine our groups into a group
 meta_group = displayio.Group()
 
 meta_group.append(bg_group)
-meta_group.append(sprite_group)
+meta_group.append(snake.group)
 
-
-# Set sprite location - unlike the adafruit instructions, I seem to need to set
-# the sprite_group location (not the sprite)
-sprite_group.x = 0
-sprite_group.y = 80
 
 # Add the Group to the Display
 # PyGamer resolution is 160x128
@@ -125,18 +208,6 @@ async def move():
                 delta_y = -1
                 delta_x = 0
 
-        # Actually move the snake
-        sprite_group.x += delta_x
-        sprite_group.y += delta_y
-
-        if sprite_group.x < -16:
-            sprite_group.x = 160 - 16
-        if sprite_group.x > 160 - 16:
-            sprite_group.x = -16
-
-        if sprite_group.y < -16:
-            sprite_group.y = 128 - 16
-        if sprite_group.y > 128 - 16:
-            sprite_group.y = -16
+        snake.move(delta_x, delta_y)
 
         await asyncio.sleep(0.1)
