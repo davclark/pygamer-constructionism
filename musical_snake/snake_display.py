@@ -36,9 +36,9 @@ class Sequencer:
     2. Provide logic for sprite collision and note-playing
     '''
     # On-screen left-right / x location of our circles
-    lr_locs = [10, 30, 50, 70, 90, 110, 130, 150]
+    lr_locs = [10 + 20*i for i in range(8)]
     # On-screen y location of our rows
-    row_locs = [64]
+    row_locs = [32 + 20*i for i in range(4)]
     group: displayio.Group
     notes: list[tuple[Coords, displayio.TileGrid, Solfège]]
 
@@ -92,7 +92,7 @@ class Sequencer:
     def bump(self, loc: Coords):
         for note_loc, _, note in self.notes:
             curr_dist = dist(loc, note_loc)
-            if curr_dist <= 5:
+            if curr_dist <= 7:
                 self.instrument.play(note, 'sequencer')
                 break
         else:
