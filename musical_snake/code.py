@@ -21,10 +21,10 @@ except ImportError:
     pass
 
 mary: list[list[Solfège]] = [
-        [MI, RE, DO, RE,   MI, MI, MI,   None],
-        [RE, RE, RE, None, MI, SO, SO,   None],
-        [MI, RE, DO, RE,   MI, MI, MI,   MI],
-        [MI, RE, RE, MI,   RE, DO, None, None],
+        [MI, RE, DO, RE,   MI, MI,   MI,   None],
+        [RE, RE, RE, None, MI, SO,   SO,   None],
+        [MI, RE, DO, RE,   MI, MI,   MI,   MI],
+        [RE, RE, MI, RE,   DO, None, None, None],
         ]
 
 async def main(sequences: list[list[Solfège]]):
