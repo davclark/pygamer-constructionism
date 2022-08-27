@@ -170,7 +170,7 @@ class Snake:
 
             self.sequencer.bump((self.group.x + 16, self.group.y + 16))
 
-            await asyncio.sleep(1 / 15)
+            await asyncio.sleep(1 / 30)
 
 
     def check_joystick(self, delta_x, delta_y) -> Coords:
