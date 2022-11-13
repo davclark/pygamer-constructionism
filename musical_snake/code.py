@@ -7,7 +7,7 @@ import displayio
 import board
 
 from snake_display import Sequencer, Snake
-from instrument import AColorInstrument, DO, RE, MI, SO
+from instrument import AColorMIDI, DO, RE, MI, SO
 
 # Types
 try:
@@ -31,7 +31,7 @@ async def main(sequences: list[list[Solfège]]):
     # Top-level group for combining all our groups
     meta_group = displayio.Group()
 
-    instrument = AColorInstrument()
+    instrument = AColorMIDI()
     sequencer = Sequencer(instrument)
     for row, sequence in enumerate(sequences):
         sequencer.notes_for_sequence(sequence, row)
