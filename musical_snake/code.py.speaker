@@ -7,7 +7,7 @@ import displayio
 import board
 
 from snake_display import Sequencer, Snake
-from instrument import AColorMIDI, DO, RE, MI, FA, SO, LA
+from instrument import AColorInstrument, DO, RE, MI, SO
 
 # Types
 try:
@@ -27,17 +27,11 @@ mary: list[list[Solfège]] = [
         [RE, RE, MI, RE,   DO, None, None, None],
         ]
 
-twinkle: list[list[Solfège]] = [
-        [DO, DO, SO, SO, LA, LA, SO, None],
-        [FA, FA, MI, MI, RE, RE, DO, None],
-        [SO, SO, FA, FA, MI, MI, RE, None],
-        ]
-
 async def main(sequences: list[list[Solfège]]):
     # Top-level group for combining all our groups
     meta_group = displayio.Group()
 
-    instrument = AColorMIDI()
+    instrument = AColorInstrument()
     sequencer = Sequencer(instrument)
     for row, sequence in enumerate(sequences):
         sequencer.notes_for_sequence(sequence, row)
@@ -59,8 +53,4 @@ async def main(sequences: list[list[Solfège]]):
     # An Exception in either task will propagate here
     await asyncio.gather(move_task, groove_task)
 
-while True:
-    break
-
-
-asyncio.run(main(twinkle))
+asyncio.run(main(mary))

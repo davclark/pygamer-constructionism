@@ -58,7 +58,6 @@ class Sequencer:
         '''
         Make a visual row for the sequencer
         '''
-        # For the time being we will skip the 8th note, as we only have 7 x_locs
         for lr_index, note in enumerate(seq):
             if note is not None:
                 self.add_note(note, lr_index, row_index)

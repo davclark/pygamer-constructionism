@@ -63,7 +63,9 @@ class Color:
 DO: Solfège = 0
 RE: Solfège = 1
 MI: Solfège = 2
-SO: Solfège = 3
+FA: Solfège = 3
+SO: Solfège = 4
+LA: Solfège = 5
 
 uart = busio.UART(board.TX, board.RX, baudrate=31250, timeout=0.001)  # init UART
 midi_in_channel = 2
@@ -80,10 +82,10 @@ rest = note_hold / 5
 
 class AColorInstrument:
     # Frequencies with A natural (440 Hz) as the root
-    tones = [440, 493.88, 554.37, 659.25]
+    tones = [440, 493.88, 554.37, None, 659.25, None]
 
     # Based on the keycap colors and ordering on my PyGamer
-    colors = [Color.YELLOW, Color.WHITE, Color.RED, Color.BLACK]
+    colors = [Color.YELLOW, Color.WHITE, Color.RED, Color.BROWN, Color.BLACK, Color.GREEN]
 
     playing = None
 
@@ -139,7 +141,7 @@ class AColorInstrument:
 
 
 class AColorMIDI(AColorInstrument):
-    tones = [48, 50, 52, 55]
+    tones = [48, 50, 52, 53, 55, 57]
     # We're using maximum velocity for now
     def start_playing(self, frequency: int):
         midi.send(NoteOn(frequency, 127))
