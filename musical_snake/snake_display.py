@@ -17,7 +17,7 @@ except ImportError:
 
 import displayio
 
-from adafruit_pybadger.pygamer import pygamer
+from adafruit_pybadger import pybadger
 import adafruit_imageload
 from adafruit_display_shapes.circle import Circle
 
@@ -179,41 +179,30 @@ class Snake:
 
         We take the previous coordinates because we don't update if the joystick is neutral
         '''
-        # I developed these thresholds empirically inspecting pygamer.joystick on the REPL
-        # Maybe it's nicer to just use pygamer.button.right?
-        # But will wait on that until after checking out the stage library
-        thresh = {
-            'right': 36000,
-            'left': 30000,
-            'up': 35000,
-            'down': 29000,
-        }
-
-        x, y = pygamer.joystick
 
         # We include ONLY cases where the joystick is pressed in some direction
         # If we're in the middle, we don't update
-        if x > thresh['right']:
+        if pybadger.button.right:
             delta_x = 1
-            if y > thresh['up']:
+            if pybadger.button.down:
                 delta_y = 1
-            elif y < thresh['down']:
+            elif pybadger.button.up:
                 delta_y = -1
             else:
                 delta_y = 0
-        elif x < thresh['left']:
+        elif pybadger.button.left:
             delta_x = -1
-            if y > thresh['up']:
+            if pybadger.button.down:
                 delta_y = 1
-            elif y < thresh['down']:
+            elif pybadger.button.up:
                 delta_y = -1
             else:
                 delta_y = 0
         else:
-            if y > thresh['up']:
+            if pybadger.button.down:
                 delta_y = 1
                 delta_x = 0
-            elif y < thresh['down']:
+            elif pybadger.button.up:
                 delta_y = -1
                 delta_x = 0
 

@@ -8,7 +8,7 @@ try:
 except ImportError:
     pass
 
-from adafruit_pybadger.pygamer import pygamer
+from adafruit_pybadger import pybadger as pygamer
 
 
 class Color:
